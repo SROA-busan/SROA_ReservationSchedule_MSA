@@ -31,14 +31,13 @@ public class LocationServiceImpl implements LocationService {
     Integer MAX = 987654321;
 
 
-
     ServiceCenterRepository serviceCenterRepository;
     ScheduleRepository scheduleRepository;
 
     public LocationServiceImpl(ServiceCenterRepository serviceCenterRepository,
-                               ScheduleRepository scheduleRepository){
-        this.serviceCenterRepository=serviceCenterRepository;
-        this.scheduleRepository=scheduleRepository;
+                               ScheduleRepository scheduleRepository) {
+        this.serviceCenterRepository = serviceCenterRepository;
+        this.scheduleRepository = scheduleRepository;
     }
 
     @Override
@@ -47,6 +46,7 @@ public class LocationServiceImpl implements LocationService {
         List<ServiceCenter> serviceCenters = serviceCenterRepository.findByAddressContaining(rootAddress);
 
         Coordinates customerCoordinates = findCoordinates(customerAddress);
+        System.out.println("탐색 서비스센터 갯수 : " + serviceCenters.size());
 
         Integer min = MAX;
         int min_idx = 0, idx = 0;
@@ -192,11 +192,11 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
-
-
     // 도로명 주소에 대해 좌표 계산
     private Coordinates findCoordinates(String customerAddress) {
         String apiURL = "http://api.vworld.kr/req/address";
+
+
         JsonParser jsonParser = JsonParserFactory.getJsonParser();
         try {
             URL url = new URL(apiURL);
@@ -239,8 +239,10 @@ public class LocationServiceImpl implements LocationService {
             br.close();
             con.disconnect();
             Map<String, Object> map = jsonParser.parseMap(response.toString());
-            Map<String, Object> point = (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) map.get("response")).get("result")).get("point");
 
+            System.out.println(map);
+            Map<String, Object> point = (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) map.get("response")).get("result")).get("point");
+            System.out.println(point);
             return new Coordinates(Double.parseDouble((String) point.get("x")), Double.parseDouble((String) point.get("y")));
         } catch (IOException e) {
             e.printStackTrace();
