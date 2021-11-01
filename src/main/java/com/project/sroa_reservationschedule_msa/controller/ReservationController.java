@@ -18,6 +18,7 @@ import java.util.Map;
 @Controller
 @ResponseBody
 public class ReservationController {
+    // status : 0-> 예약완료 , 1 -> 처리 완료, 2 -> 수령, 3 -> 수리 완료, 4 -> 반납예약완료, 5-> 평가 완료
     LocationService locationService;
     OptimizationService optimizationService;
 
@@ -66,5 +67,7 @@ public class ReservationController {
         optimizationService.allocateSchedule(engineerInfo, product, form.getDateTime(), form.getUserNum(), form.getCustomerName(), form.getPhoneNum(), form.getAddress());
         return engineerInfo;
     }
+
+    //반납예약
 
 }
