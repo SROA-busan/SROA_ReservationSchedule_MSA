@@ -52,6 +52,7 @@ public class LocationServiceImpl implements LocationService {
         int min_idx = 0, idx = 0;
         for (ServiceCenter s : serviceCenters) {
             assert customerCoordinates != null;
+            // 실제 서비스 환경에서는 지월 예정 =============================================
             if (s.getLongitude() == null || s.getLatitude() == null) {
                 System.out.println("현재 서비스 센터의 위도, 경도 정보가 없어 갱신");
                 Coordinates coordinates = findCoordinates(s.getAddress());
@@ -59,6 +60,7 @@ public class LocationServiceImpl implements LocationService {
                 s.setLongitude(coordinates.getLon());
                 serviceCenterRepository.updatePos(s.getLatitude(), s.getLongitude(), s.getCenterNum());
             }
+            //=========================================================================================
 
             Integer now = harverSine(customerCoordinates, new Coordinates(s.getLongitude(), s.getLatitude()));
             if (now < min) {
