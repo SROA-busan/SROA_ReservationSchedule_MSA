@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
@@ -46,5 +47,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "SELECT u.user_num FROM user_info u WHERE u.id=?1 )")
     List<Schedule> findAllEndDateByUserIdAndDate(String id, String date);
 
-
+    @Transactional
+    @Modifying
+    @Query("UPDATE Schedule s SET s.endDate=?2, s.status=4  WHERE s.scheduleNum=?1 ")
+    void updateForReturn(Long scheduleNum, LocalDateTime dateTime);
 }

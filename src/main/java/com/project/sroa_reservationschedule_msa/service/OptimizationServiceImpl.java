@@ -22,14 +22,15 @@ public class OptimizationServiceImpl implements OptimizationService {
     ProductRepository productRepository;
     ScheduleRepository scheduleRepository;
     UserInfoRepository userInfoRepository;
+
     public OptimizationServiceImpl(EngineerInfoRepository engineerInfoRepository,
                                    ProductRepository productRepository,
                                    ScheduleRepository scheduleRepository,
-                                   UserInfoRepository userInfoRepository){
-        this.engineerInfoRepository=engineerInfoRepository;
-        this.productRepository=productRepository;
-        this.scheduleRepository=scheduleRepository;
-        this.userInfoRepository=userInfoRepository;
+                                   UserInfoRepository userInfoRepository) {
+        this.engineerInfoRepository = engineerInfoRepository;
+        this.productRepository = productRepository;
+        this.scheduleRepository = scheduleRepository;
+        this.userInfoRepository = userInfoRepository;
     }
 
 
@@ -111,7 +112,7 @@ public class OptimizationServiceImpl implements OptimizationService {
         }
 
         // 비교적 거리가 먼 후보 제외
-        if(distDev!=0.0) {
+        if (distDev != 0.0) {
             for (int i = 0; i < decideList.size(); i++) {
                 if (decideList.get(i).getDist() >= distMean + distDev) {
                     System.out.println("고객과 거리가 너무 멀어 배제되는 엔지니어 : " + decideList.get(i).getNum() + ", 거리 : " + decideList.get(i).getDist());
@@ -178,12 +179,12 @@ public class OptimizationServiceImpl implements OptimizationService {
 
         // 결과 엔지니어가 여러명이라면 작업량으로 선별
         if (sortEngineerNumList.size() > 1) {
-            System.out.println("최종 선별된 엔지니어가 여러명 -> " + sortEngineerNumList.size()+"명 -> 작업량으로 결정");
+            System.out.println("최종 선별된 엔지니어가 여러명 -> " + sortEngineerNumList.size() + "명 -> 작업량으로 결정");
             int minIdx = 0;
             int min = engineerInfoRepository.findWorkByNum(sortEngineerNumList.get(0));
             for (int i = 1; i < sortEngineerNumList.size(); i++) {
                 int temp = engineerInfoRepository.findWorkByNum(sortEngineerNumList.get(i));
-                System.out.println(sortEngineerNumList.get(i)+"의 작업량 : "+ temp);
+                System.out.println(sortEngineerNumList.get(i) + "의 작업량 : " + temp);
                 if (min >= temp) {
                     min = temp;
                     minIdx = i;
@@ -212,6 +213,7 @@ public class OptimizationServiceImpl implements OptimizationService {
                                  String dateTime, Long userNum,
                                  String customerName, String phoneNum, String address) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
         UserInfo userInfo = userInfoRepository.findByuserNum(userNum);
         Schedule schedule = Schedule.builder()
                 .product(product)
@@ -224,6 +226,42 @@ public class OptimizationServiceImpl implements OptimizationService {
                 .build();
         scheduleRepository.save(schedule);
         engineerInfoRepository.updateEngineerAmountOfWork(engineerInfo.getEngineerNum());
+    }
+
+    // 반납 서비스
+
+    @Override
+    public Schedule findScheduleByScheduleNum(Long scheduleNum) {
+        return scheduleRepository.findByScheduleNum(scheduleNum);
+    }
+
+    @Override
+    public EngineerInfo findEngineerByScheduleNum(Long scheduleNum) {
+        return scheduleRepository.findByScheduleNum(scheduleNum).getEngineerInfo();
+    }
+
+    @Override
+    public List<Boolean> searchAvailableTimeForReturn(Long engineerNum, String date) {
+        List<Boolean> res = new ArrayList<>();
+        for (String time : times) {
+            time = date + " " + time;
+            System.out.println(time);
+            List<Schedule> schedules=scheduleRepository.findAllScheduleTimeByEngineerNumAndDate(engineerNum, time);
+            if (schedules.size() == 0)
+                res.add(true);
+            else
+                res.add(false);
+        }
+        return res;
+    }
+
+    @Override
+    public void allocateReturnSchedule(Long scheduleNum, String dateTime) {
+        System.out.println(dateTime);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime endDate = LocalDateTime.parse(dateTime, formatter);
+        System.out.println(endDate);
+        scheduleRepository.updateForReturn(scheduleNum, endDate);
     }
 
     // 평균구하기

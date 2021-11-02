@@ -3,6 +3,7 @@ package com.project.sroa_reservationschedule_msa.controller;
 import com.project.sroa_reservationschedule_msa.dto.RequestBooking;
 import com.project.sroa_reservationschedule_msa.model.EngineerInfo;
 import com.project.sroa_reservationschedule_msa.model.Product;
+import com.project.sroa_reservationschedule_msa.model.Schedule;
 import com.project.sroa_reservationschedule_msa.model.ServiceCenter;
 import com.project.sroa_reservationschedule_msa.opt.Coordinates;
 import com.project.sroa_reservationschedule_msa.opt.SortElem;
@@ -68,6 +69,29 @@ public class ReservationController {
         return engineerInfo;
     }
 
-    //반납예약
+    //반납예약 ==============================================================================
+    //고객 날짜 선택시 반납 가능 시간대 현황 조회
+    @GetMapping("/schedule/findAvailableTimeForReturn/{scheduleNum}/{date}")
+    public List<Boolean> findAvailableTimeForReturn(@PathVariable("scheduleNum") Long scheduleNum,
+                                                    @PathVariable("date") String date) {
 
+        EngineerInfo engineer = optimizationService.findEngineerByScheduleNum(scheduleNum);
+
+        return optimizationService.searchAvailableTimeForReturn(engineer.getEngineerNum(), date);
+    }
+
+
+    @PostMapping("/schedule/allocateReturn/{scheduleNum}/{dateTime}")
+    public boolean allocateReturn(@PathVariable("scheduleNum") Long scheduleNum,
+                                  @PathVariable("dateTime") String dateTime){
+
+
+        Schedule schedule=optimizationService.findScheduleByScheduleNum(scheduleNum);
+        if(schedule.getStatus()!=3){
+            System.out.println("반납예약할 수 없습니다. 다시 시도");
+            return false;
+        }
+        optimizationService.allocateReturnSchedule(scheduleNum,dateTime);
+        return true;
+    }
 }
