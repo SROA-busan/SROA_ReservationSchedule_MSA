@@ -210,11 +210,11 @@ public class OptimizationServiceImpl implements OptimizationService {
 
     @Override
     public void allocateSchedule(EngineerInfo engineerInfo, Product product,
-                                 String dateTime, Long userNum,
+                                 String dateTime, String userId,
                                  String customerName, String phoneNum, String address) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        UserInfo userInfo = userInfoRepository.findByuserNum(userNum);
+        UserInfo userInfo = userInfoRepository.findByuserId(userId);
         Schedule schedule = Schedule.builder()
                 .product(product)
                 .engineerInfo(engineerInfo)
