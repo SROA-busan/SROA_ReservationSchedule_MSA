@@ -65,7 +65,7 @@ public class ReservationController {
 
         //해당 엔지니어에 일정 부여
         Product product = optimizationService.storeProductForReserve(form.getClassifyName(), form.getContent());
-        optimizationService.allocateSchedule(engineerInfo, product, form.getDateTime(), form.getUserNum(), form.getCustomerName(), form.getPhoneNum(), form.getAddress());
+        optimizationService.allocateSchedule(engineerInfo, product, form.getDateTime(), form.getUserId(), form.getCustomerName(), form.getPhoneNum(), form.getAddress());
         return engineerInfo;
     }
 

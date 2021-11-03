@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class RequestBooking {
-    private Long userNum;
+    private String userId;
     private String customerName;
     private String classifyName;
     private String address;
