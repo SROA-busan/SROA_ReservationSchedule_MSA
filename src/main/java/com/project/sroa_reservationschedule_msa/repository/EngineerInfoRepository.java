@@ -16,18 +16,9 @@ public interface EngineerInfoRepository extends JpaRepository<EngineerInfo, Long
 
     @Transactional
     @Modifying
-    @Query("UPDATE EngineerInfo e SET e.avgScore=?2 WHERE e.engineerNum=?1")
-    void updateEngineerScore(long engineerNum, Integer avgScore);
-
-    @Transactional
-    @Modifying
     @Query("UPDATE EngineerInfo e SET e.amountOfWork=e.amountOfWork+1 WHERE e.engineerNum=?1")
     void updateEngineerAmountOfWork(long engineerNum);
 
-    @Transactional
-    @Modifying
-    @Query("UPDATE EngineerInfo e SET e.amountOfWork=?2 WHERE e.engineerNum=?1")
-    void updateEngineerAmountOfWorkAtCnt(Long engineerNum, Integer cnt);
 
     //센터의 엔지니어중 해당 시간에 일정이 없는 엔지니어
     @Query(nativeQuery = true, value = "SELECT e.* FROM engineer_info e WHERE e.center_num =?1 AND e.engineer_num NOT IN (\n" +
