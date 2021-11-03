@@ -83,15 +83,15 @@ public class ReservationController {
 
     @PostMapping("/schedule/allocateReturn/{scheduleNum}/{dateTime}")
     public boolean allocateReturn(@PathVariable("scheduleNum") Long scheduleNum,
-                                  @PathVariable("dateTime") String dateTime){
+                                  @PathVariable("dateTime") String dateTime) {
 
 
-        Schedule schedule=optimizationService.findScheduleByScheduleNum(scheduleNum);
-        if(schedule.getStatus()!=3){
+        Schedule schedule = optimizationService.findScheduleByScheduleNum(scheduleNum);
+        if (schedule.getStatus() != 3) {
             System.out.println("반납예약할 수 없습니다. 다시 시도");
             return false;
         }
-        optimizationService.allocateReturnSchedule(scheduleNum,dateTime);
+        optimizationService.allocateReturnSchedule(scheduleNum, dateTime);
         return true;
     }
 }
