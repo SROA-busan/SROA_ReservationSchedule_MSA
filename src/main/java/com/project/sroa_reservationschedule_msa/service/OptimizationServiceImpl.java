@@ -242,6 +242,7 @@ public class OptimizationServiceImpl implements OptimizationService {
 
     @Override
     public List<Boolean> searchAvailableTimeForReturn(Long engineerNum, String date) {
+
         List<Boolean> res = new ArrayList<>();
         for (String time : times) {
             time = date + " " + time;

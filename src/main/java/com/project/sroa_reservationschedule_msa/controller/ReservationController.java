@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,8 @@ public class ReservationController {
     }
 
     @PostMapping("/schedule/allocateEngineer")
-    public EngineerInfo allocateEngineer(@RequestBody RequestBooking form) {
+    public List<Object> allocateEngineer(@RequestBody RequestBooking form) {
+        System.out.println("날짜"+form.getDateTime());
         //고객 주소와 가까운 서비스 센터와 거리 찾기
         Map<String, Object> closeCenter = locationService.searchNearCenter(form.getAddress());
 
@@ -66,7 +68,12 @@ public class ReservationController {
         //해당 엔지니어에 일정 부여
         Product product = optimizationService.storeProductForReserve(form.getClassifyName(), form.getContent());
         optimizationService.allocateSchedule(engineerInfo, product, form.getDateTime(), form.getUserId(), form.getCustomerName(), form.getPhoneNum(), form.getAddress());
-        return engineerInfo;
+
+        List<Object> res = new ArrayList<Object>();
+
+        res.add(engineerInfo.getEmployeeInfo());
+        res.add(engineerInfo.getServiceCenter());
+        return res;
     }
 
     //반납예약 ==============================================================================
