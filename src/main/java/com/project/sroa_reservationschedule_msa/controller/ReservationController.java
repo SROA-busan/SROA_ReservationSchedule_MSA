@@ -43,7 +43,7 @@ public class ReservationController {
     }
 
     @PostMapping("/schedule/allocateEngineer")
-    public List<Object> allocateEngineer(@RequestBody RequestBooking form) {
+    public List<String> allocateEngineer(@RequestBody RequestBooking form) {
         System.out.println("날짜"+form.getDateTime());
         //고객 주소와 가까운 서비스 센터와 거리 찾기
         Map<String, Object> closeCenter = locationService.searchNearCenter(form.getAddress());
@@ -69,10 +69,11 @@ public class ReservationController {
         Product product = optimizationService.storeProductForReserve(form.getClassifyName(), form.getContent());
         optimizationService.allocateSchedule(engineerInfo, product, form.getDateTime(), form.getUserId(), form.getCustomerName(), form.getPhoneNum(), form.getAddress());
 
-        List<Object> res = new ArrayList<Object>();
+        List<String> res = new ArrayList<String>();
+        res.add(engineerInfo.getEmployeeInfo().getName());
+        res.add(engineerInfo.getServiceCenter().getCenterName());
+        res.add(engineerInfo.getServiceCenter().getAddress());
 
-        res.add(engineerInfo.getEmployeeInfo());
-        res.add(engineerInfo.getServiceCenter());
         return res;
     }
 
