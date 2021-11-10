@@ -119,7 +119,10 @@ public class LocationServiceImpl implements LocationService {
                 }
                 decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                 System.out.println("당일 일정 없음");
-            } else {
+            }
+            // 현재 할당 될 일정이 마지막 일정이 아님, 일정 사이 or 첫번째 일정이 될 예정
+            else {
+
                 Schedule lastSchedule = timeOfSchedules.get(scheduleSize - 1);
                 String string = new String();
                 // 마지막 일정이 고객과 만나기 전이면
