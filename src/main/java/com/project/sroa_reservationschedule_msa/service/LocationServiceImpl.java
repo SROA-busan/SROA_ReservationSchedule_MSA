@@ -51,16 +51,7 @@ public class LocationServiceImpl implements LocationService {
         Integer min = MAX;
         int min_idx = 0, idx = 0;
         for (ServiceCenter s : serviceCenters) {
-            assert customerCoordinates != null;
-            // 실제 서비스 환경에서는 지월 예정 =============================================
-            if (s.getLongitude() == null || s.getLatitude() == null) {
-                System.out.println("현재 서비스 센터의 위도, 경도 정보가 없어 갱신");
-                Coordinates coordinates = findCoordinates(s.getAddress());
-                s.setLatitude(coordinates.getLat());
-                s.setLongitude(coordinates.getLon());
-                serviceCenterRepository.updatePos(s.getLatitude(), s.getLongitude(), s.getCenterNum());
-            }
-            //=========================================================================================
+
 
             Integer now = harverSine(customerCoordinates, new Coordinates(s.getLongitude(), s.getLatitude()));
             if (now < min) {
@@ -77,8 +68,8 @@ public class LocationServiceImpl implements LocationService {
 
         Map<String, Object> map = new HashMap<>();
         map.put("center", serviceCenters.get(min_idx));
-        map.put("centerCoor", new Coordinates(serviceCenters.get(min_idx).getLatitude(), serviceCenters.get(min_idx).getLongitude()));
-        Coordinates center = new Coordinates(serviceCenters.get(min_idx).getLatitude(), serviceCenters.get(min_idx).getLongitude());
+        map.put("centerCoor", new Coordinates(serviceCenters.get(min_idx).getLongitude(),serviceCenters.get(min_idx).getLatitude()));
+        Coordinates center = new Coordinates(serviceCenters.get(min_idx).getLongitude(), serviceCenters.get(min_idx).getLatitude());
         map.put("dir", calcDir(center, customerCoordinates));
         map.put("distance", min);
         map.put("customerCoor", customerCoordinates);
@@ -91,6 +82,8 @@ public class LocationServiceImpl implements LocationService {
 
 //        Integer distBetweenCustomerAndCenter_first = harverSine(centerCoor, customerCoor);
         Integer dist;
+        Integer afterDist;
+        Integer beforeDist;
         Integer dirDiff;
         Coordinates beforeCoor;
         Coordinates afterCoor;
@@ -120,9 +113,9 @@ public class LocationServiceImpl implements LocationService {
                 decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                 System.out.println("당일 일정 없음");
             }
+
             // 현재 할당 될 일정이 마지막 일정이 아님, 일정 사이 or 첫번째 일정이 될 예정
             else {
-
                 Schedule lastSchedule = timeOfSchedules.get(scheduleSize - 1);
                 String string = new String();
                 // 마지막 일정이 고객과 만나기 전이면
@@ -137,17 +130,27 @@ public class LocationServiceImpl implements LocationService {
                 // 이번에 할당될 일정이 마지막 일정보다 시간적으로 뒤
                 if (dateTime.compareTo(string) > 0) {
                     System.out.println("현재 할당되는 일정이 마지막 일정");
-                    afterCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 1).getAddress());
-                    dist = harverSine(customerCoor, afterCoor);
+                    System.out.println(timeOfSchedules.get(scheduleSize - 1).getAddress());
+                    beforeCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 1).getAddress());
+                    Coordinates bebeforeCoor= new Coordinates(null, null);
+
 
                     // 일정이 한개라면 방향성 : 센터 - 원래 일정 - 현재 할당 일정
                     if (timeOfSchedules.size() == 1) {
-                        beforeCoor = centerCoor;
+                        bebeforeCoor = centerCoor;
                     } else {
-                        beforeCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 2).getAddress());
+                        bebeforeCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 2).getAddress());
                     }
-                    dirDiff = calcDirDiff(beforeCoor, afterCoor, customerCoor);
+                    System.out.println(beforeCoor.getLat()+","+beforeCoor.getLon());
+                    System.out.println(bebeforeCoor.getLat()+","+bebeforeCoor.getLon());
+                    beforeDist=harverSine(bebeforeCoor,beforeCoor);
+                    afterDist=harverSine(beforeCoor, customerCoor);
 
+                    dirDiff = calcDirDiff(bebeforeCoor, beforeCoor, customerCoor);
+                    System.out.println(engineer.getEngineerNum()+"번 엔지니어");
+                    System.out.println("이전 거리 "+ beforeDist);
+                    System.out.println("이후 거리 "+ afterDist);
+                    dist=(Integer)(afterDist+beforeDist)/2;
                     decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                 }
                 // 현재 할당될 일정이 일정 사이 or 다른 일정들 보다 일찍 시작되는 일정정
@@ -169,26 +172,26 @@ public class LocationServiceImpl implements LocationService {
                         }
                         idx++;
                     }
-                    // 다른 일정들보다 시간이 빠름
                     if (idx == -1) {
                         //전 - 센터, 중간 - 이번 일정, 후 - 이번에 배정되는 일정 뒤의 일정(idx+1)
+                        beforeDist= harverSine(centerCoor, customerCoor);
                         afterCoor = findCoordinates(timeOfSchedules.get(idx + 1).getAddress());
-                        dist = harverSine(customerCoor, afterCoor);
-
+                        afterDist = harverSine(customerCoor, afterCoor);
+                        dist=(Integer) (beforeDist+afterDist)/2;
                         dirDiff = calcDirDiff(centerCoor, customerCoor, afterCoor);
                         decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                     } else {
                         // 전 -  이번에 배정되는 일정 전의 일정(idx) 중간 - 이번 일정, 후 - 이번에 배정되는 일정 뒤의 일정(idx+1)
                         beforeCoor = findCoordinates(timeOfSchedules.get(idx).getAddress());
                         afterCoor = findCoordinates(timeOfSchedules.get(idx + 1).getAddress());
-                        dist = harverSine(customerCoor, afterCoor);
-
+                        beforeDist = harverSine(beforeCoor, customerCoor);
+                        afterDist = harverSine(customerCoor, afterCoor);
+                        dist=(Integer) (beforeDist+afterDist)/2;
                         dirDiff = calcDirDiff(beforeCoor, customerCoor, afterCoor);
                         decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                     }
                 }
             }
-
             System.out.println("고객과의 평가 거리 : " + dist);
         }
         System.out.println("---------------------------------------");
@@ -248,6 +251,7 @@ public class LocationServiceImpl implements LocationService {
             System.out.println(map);
             Map<String, Object> point = (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) map.get("response")).get("result")).get("point");
             System.out.println(point);
+            map.clear();
             return new Coordinates(Double.parseDouble((String) point.get("x")), Double.parseDouble((String) point.get("y")));
         } catch (IOException e) {
             e.printStackTrace();
@@ -258,11 +262,10 @@ public class LocationServiceImpl implements LocationService {
     // 좌표간 방향성(방위각) 구구하기
     private Integer calcDir(Coordinates a, Coordinates b) {
         double lat1_rad = convertDegreesToRadians(a.getLat());
-        double lat2_rad = convertDegreesToRadians(b.getLon());
-        double lon_diff_rad = convertDegreesToRadians(a.getLon() - b.getLon());
+        double lat2_rad = convertDegreesToRadians(b.getLat());
+        double lon_diff_rad = convertDegreesToRadians(b.getLon()-a.getLon() );
         double y = Math.sin(lon_diff_rad) * Math.cos(lat2_rad);
         double x = Math.cos(lat1_rad) * Math.sin(lat2_rad) - Math.sin(lat1_rad) * Math.cos(lat2_rad) * Math.cos(lon_diff_rad);
-
         return ((int) convertRadiansToDegrees(Math.atan2(y, x)) + 360) % 360;
     }
 
@@ -270,9 +273,14 @@ public class LocationServiceImpl implements LocationService {
     Integer calcDirDiff(Coordinates before, Coordinates now, Coordinates after) {
         Integer dir1 = calcDir(before, now);
         Integer dir2 = calcDir(now, after);
+        System.out.println("이전 방향성 : "+dir1);
+        System.out.println("이후 방향성 : "+dir2);
         Integer diff1 = Math.abs(dir1 - dir2);
-        return diff1;
-//        return Math.min(diff1, 360 - diff1);
+        System.out.println(diff1);
+        if(diff1>180)
+            return 360-diff1;
+        else
+            return diff1;
     }
 
     // 직선거리 미터 반환

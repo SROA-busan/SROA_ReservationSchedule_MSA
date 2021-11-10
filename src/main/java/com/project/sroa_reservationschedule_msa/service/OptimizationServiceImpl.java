@@ -117,18 +117,24 @@ public class OptimizationServiceImpl implements OptimizationService {
                 if (decideList.get(i).getDist() >= distMean + distDev) {
                     System.out.println("고객과 거리가 너무 멀어 배제되는 엔지니어 : " + decideList.get(i).getNum() + ", 거리 : " + decideList.get(i).getDist());
                     decideList.remove(i);
+                    distDev = calcDev(decideList);
+
                 }
             }
         }
+        distMean = calcMean(decideList);
 
         System.out.println("거리상 배제후 남은 엔지니어의 수: " + decideList.size());
+        System.out.println("거리가 너무 먼 엔지니어 배제후");
+        System.out.println("엔지니어와 고객 거리의 평균 : " + distMean);
+        System.out.println("엔지니어와 고객 거리의 표준편차 : " + distDev);
         List<SortElem> sortList = new ArrayList<>();
 
         Integer minDist = 987654321;
         Integer minDirDiff = 987;
 
         for (int i = 0; i < decideList.size(); i++) {
-            if (decideList.get(i).getDist() < distMean - distDev) {
+            if (decideList.get(i).getDist() < distMean - (distDev * 0.9)) {
                 System.out.println("거리가 너무 가까워 선별 가능성이 높은 엔지니어 : " + decideList.get(i).getNum() + ", 거리 : " + decideList.get(i).getDist());
 
                 sortList.add(decideList.get(i));
@@ -247,7 +253,7 @@ public class OptimizationServiceImpl implements OptimizationService {
         for (String time : times) {
             time = date + " " + time;
             System.out.println(time);
-            List<Schedule> schedules=scheduleRepository.findAllScheduleTimeByEngineerNumAndDate(engineerNum, time);
+            List<Schedule> schedules = scheduleRepository.findAllScheduleTimeByEngineerNumAndDate(engineerNum, time);
             if (schedules.size() == 0)
                 res.add(true);
             else
