@@ -51,9 +51,8 @@ public class LocationServiceImpl implements LocationService {
         Integer min = MAX;
         int min_idx = 0, idx = 0;
         for (ServiceCenter s : serviceCenters) {
-
-
             Integer now = harverSine(customerCoordinates, new Coordinates(s.getLongitude(), s.getLatitude()));
+            System.out.println(s.getCenterNum()+"서비스 센터와의 거리 : "+now);
             if (now < min) {
                 min = now;
                 min_idx = idx;
@@ -141,15 +140,11 @@ public class LocationServiceImpl implements LocationService {
                     } else {
                         bebeforeCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 2).getAddress());
                     }
-                    System.out.println(beforeCoor.getLat()+","+beforeCoor.getLon());
-                    System.out.println(bebeforeCoor.getLat()+","+bebeforeCoor.getLon());
                     beforeDist=harverSine(bebeforeCoor,beforeCoor);
                     afterDist=harverSine(beforeCoor, customerCoor);
 
                     dirDiff = calcDirDiff(bebeforeCoor, beforeCoor, customerCoor);
-                    System.out.println(engineer.getEngineerNum()+"번 엔지니어");
-                    System.out.println("이전 거리 "+ beforeDist);
-                    System.out.println("이후 거리 "+ afterDist);
+
                     dist=(Integer)(afterDist+beforeDist)/2;
                     decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                 }
