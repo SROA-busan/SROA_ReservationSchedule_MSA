@@ -72,7 +72,7 @@ public class ReservationController {
         List<String> res = new ArrayList<String>();
         res.add(engineerInfo.getEmployeeInfo().getName());
         res.add(engineerInfo.getServiceCenter().getCenterName());
-        res.add(engineerInfo.getServiceCenter().getAddress());
+        res.add(engineerInfo.getUserInfo().getPhoneNum());
 
         return res;
     }
