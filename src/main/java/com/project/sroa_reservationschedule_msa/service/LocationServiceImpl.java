@@ -271,7 +271,8 @@ public class LocationServiceImpl implements LocationService {
         Integer dir1 = calcDir(before, now);
         Integer dir2 = calcDir(now, after);
         Integer diff1 = Math.abs(dir1 - dir2);
-        return Math.min(diff1, 360 - diff1);
+        return diff1;
+//        return Math.min(diff1, 360 - diff1);
     }
 
     // 직선거리 미터 반환
