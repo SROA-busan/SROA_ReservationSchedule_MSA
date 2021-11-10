@@ -124,10 +124,6 @@ public class OptimizationServiceImpl implements OptimizationService {
         }
         distMean = calcMean(decideList);
 
-        System.out.println("거리상 배제후 남은 엔지니어의 수: " + decideList.size());
-        System.out.println("거리가 너무 먼 엔지니어 배제후");
-        System.out.println("엔지니어와 고객 거리의 평균 : " + distMean);
-        System.out.println("엔지니어와 고객 거리의 표준편차 : " + distDev);
         List<SortElem> sortList = new ArrayList<>();
 
         Integer minDist = 987654321;
