@@ -51,9 +51,8 @@ public class LocationServiceImpl implements LocationService {
         Integer min = MAX;
         int min_idx = 0, idx = 0;
         for (ServiceCenter s : serviceCenters) {
-
-
             Integer now = harverSine(customerCoordinates, new Coordinates(s.getLongitude(), s.getLatitude()));
+            System.out.println(s.getCenterNum()+"서비스 센터와의 거리 : "+now);
             if (now < min) {
                 min = now;
                 min_idx = idx;
