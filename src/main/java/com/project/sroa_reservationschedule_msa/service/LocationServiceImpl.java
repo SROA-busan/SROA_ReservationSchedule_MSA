@@ -4,6 +4,8 @@ import com.project.sroa_reservationschedule_msa.model.EngineerInfo;
 import com.project.sroa_reservationschedule_msa.model.Schedule;
 import com.project.sroa_reservationschedule_msa.model.ServiceCenter;
 import com.project.sroa_reservationschedule_msa.opt.Coordinates;
+import com.project.sroa_reservationschedule_msa.opt.Pair;
+import com.project.sroa_reservationschedule_msa.opt.PairDateComparator;
 import com.project.sroa_reservationschedule_msa.opt.SortElem;
 import com.project.sroa_reservationschedule_msa.repository.ScheduleRepository;
 import com.project.sroa_reservationschedule_msa.repository.ServiceCenterRepository;
@@ -20,10 +22,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class LocationServiceImpl implements LocationService {
@@ -51,6 +50,9 @@ public class LocationServiceImpl implements LocationService {
         Integer min = MAX;
         int min_idx = 0, idx = 0;
         for (ServiceCenter s : serviceCenters) {
+
+
+
             Integer now = harverSine(customerCoordinates, new Coordinates(s.getLongitude(), s.getLatitude()));
             System.out.println(s.getCenterNum()+"서비스 센터와의 거리 : "+now);
             if (now < min) {
@@ -112,25 +114,33 @@ public class LocationServiceImpl implements LocationService {
                 decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                 System.out.println("당일 일정 없음");
             }
-
             // 현재 할당 될 일정이 마지막 일정이 아님, 일정 사이 or 첫번째 일정이 될 예정
             else {
-                Schedule lastSchedule = timeOfSchedules.get(scheduleSize - 1);
-                String string = new String();
-                // 마지막 일정이 고객과 만나기 전이면
-                if (lastSchedule.getStatus() == 0) {
-                    string = lastSchedule.getStartDate().format(formatter);
+
+                // 해당 날짜에 대한 기준으로 정렬
+                List<Pair> timeList=  new ArrayList<>();
+                for(Schedule schedule:timeOfSchedules){
+                    if(schedule.getEndDate()==null){
+                        timeList.add(new Pair(schedule.getScheduleNum(), schedule.getStartDate().toString().replace('T', ' ').substring(0,16)));
+                    }
+                    else{
+                        timeList.add(new Pair(schedule.getScheduleNum(), schedule.getEndDate().toString().replace('T', ' ').substring(0,16)));
+                    }
                 }
-                // 마지막 일정이 수령후 수리 완료 상태면
-                else if (lastSchedule.getStatus() == 3) {
-                    string = lastSchedule.getEndDate().format(formatter);
+                Collections.sort(timeList, new PairDateComparator());
+
+                for(Pair p:timeList){
+                    System.out.println(p.getNum()+", "+p.getDate());
                 }
+
+                Pair pair = timeList.get(timeList.size()-1);
+                String string = pair.getDate();
 
                 // 이번에 할당될 일정이 마지막 일정보다 시간적으로 뒤
                 if (dateTime.compareTo(string) > 0) {
                     System.out.println("현재 할당되는 일정이 마지막 일정");
-                    System.out.println(timeOfSchedules.get(scheduleSize - 1).getAddress());
-                    beforeCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 1).getAddress());
+                    Schedule schedule = scheduleRepository.findByScheduleNum(timeList.get(timeList.size()-1).getNum());
+                    beforeCoor = findCoordinates(schedule.getAddress());
                     Coordinates bebeforeCoor= new Coordinates(null, null);
 
 
@@ -138,29 +148,25 @@ public class LocationServiceImpl implements LocationService {
                     if (timeOfSchedules.size() == 1) {
                         bebeforeCoor = centerCoor;
                     } else {
-                        bebeforeCoor = findCoordinates(timeOfSchedules.get(scheduleSize - 2).getAddress());
+                        schedule = scheduleRepository.findByScheduleNum(timeList.get(timeList.size()-2).getNum());
+                        bebeforeCoor = findCoordinates(schedule.getAddress());
                     }
-                    beforeDist=harverSine(bebeforeCoor,beforeCoor);
-                    afterDist=harverSine(beforeCoor, customerCoor);
+//                    beforeDist=harverSine(bebeforeCoor,beforeCoor);
+//                    afterDist=harverSine(beforeCoor, customerCoor);
+                    dist=harverSine(beforeCoor, customerCoor);
 
                     dirDiff = calcDirDiff(bebeforeCoor, beforeCoor, customerCoor);
 
-                    dist=(Integer)(afterDist+beforeDist)/2;
+
                     decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
                 }
                 // 현재 할당될 일정이 일정 사이 or 다른 일정들 보다 일찍 시작되는 일정정
                 else {
                     int idx = 0;
                     // 할당 될 일정이 다른 일정보다 빠른지 판단 요소
-                    for (Schedule schedule : timeOfSchedules) {
-                        // 마지막 일정이 고객과 만나기 전이면
-                        if (lastSchedule.getStatus() == 0) {
-                            string = lastSchedule.getStartDate().format(formatter);
-                        }
-                        // 마지막 일정이 수령후 수리 완료 상태면
-                        else if (lastSchedule.getStatus() == 3) {
-                            string = lastSchedule.getEndDate().format(formatter);
-                        }
+                    for (Pair schedule : timeList) {
+//                         마지막 일정이 고객과 만나기 전이면
+                        string=schedule.getDate();
                         if (dateTime.compareTo(string) < 0) {
                             idx -= 1;
                             break;
@@ -170,20 +176,23 @@ public class LocationServiceImpl implements LocationService {
                     if (idx == -1) {
                         //전 - 센터, 중간 - 이번 일정, 후 - 이번에 배정되는 일정 뒤의 일정(idx+1)
                         beforeDist= harverSine(centerCoor, customerCoor);
-                        afterCoor = findCoordinates(timeOfSchedules.get(idx + 1).getAddress());
+                        Schedule schedule = scheduleRepository.findByScheduleNum(timeList.get(idx+1).getNum());
+                        afterCoor = findCoordinates(schedule.getAddress());
                         afterDist = harverSine(customerCoor, afterCoor);
                         dist=(Integer) (beforeDist+afterDist)/2;
                         dirDiff = calcDirDiff(centerCoor, customerCoor, afterCoor);
-                        decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
+                        decideList.add(new SortElem(engineer.getEngineerNum(), afterDist, dirDiff));
                     } else {
                         // 전 -  이번에 배정되는 일정 전의 일정(idx) 중간 - 이번 일정, 후 - 이번에 배정되는 일정 뒤의 일정(idx+1)
-                        beforeCoor = findCoordinates(timeOfSchedules.get(idx).getAddress());
-                        afterCoor = findCoordinates(timeOfSchedules.get(idx + 1).getAddress());
+                        Schedule schedule=scheduleRepository.findByScheduleNum(timeList.get(idx).getNum());
+                        beforeCoor = findCoordinates(schedule.getAddress());
+                        schedule = scheduleRepository.findByScheduleNum(timeList.get(idx+1).getNum());
+                        afterCoor = findCoordinates(schedule.getAddress());
                         beforeDist = harverSine(beforeCoor, customerCoor);
                         afterDist = harverSine(customerCoor, afterCoor);
                         dist=(Integer) (beforeDist+afterDist)/2;
                         dirDiff = calcDirDiff(beforeCoor, customerCoor, afterCoor);
-                        decideList.add(new SortElem(engineer.getEngineerNum(), dist, dirDiff));
+                        decideList.add(new SortElem(engineer.getEngineerNum(), afterDist, dirDiff));
                     }
                 }
             }
