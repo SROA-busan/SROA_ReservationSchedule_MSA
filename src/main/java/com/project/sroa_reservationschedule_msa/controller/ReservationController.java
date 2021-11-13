@@ -31,6 +31,11 @@ public class ReservationController {
         this.optimizationService = optimizationService;
     }
 
+    @GetMapping("/reservation/healthCheck")
+    public boolean healthCheck(){
+        return true;
+    }
+
     // 고객 날짜 선택시 예약 가능 현황 조회
     //[ 09:00 ,10:30, 12:30, 14:00, 15:30, 17:00]
     @GetMapping("/schedule/findAvailableTime/{date}/{address}")
